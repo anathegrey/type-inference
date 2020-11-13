@@ -1,28 +1,33 @@
 module TypeinfData where
        data Expr = VarE String
-                 | Lambda String Expr Type
+                 | Lambda String Expr
                  | AppE Expr Expr
-                 | TypeE Expr Type
                  deriving (Show, Eq)
 
        data Type = VarT String
                  | AppT Type Type
+		 | ErrorType
                  deriving (Show, Eq)
 
        data Basis = Gama String Type
                   deriving (Show, Eq)
 
+       data Set = Equal Type Type
+                | Fail
+                deriving (Show, Eq)
+
        boundVar :: Expr -> [String]
        boundVar (VarE x) = []
-       boundVar (Lambda x expr t) = [x] ++ (boundVar expr)
+       boundVar (Lambda x expr) = [x] ++ (boundVar expr)
        boundVar (AppE e1 e2) = (boundVar e1) ++ (boundVar e2)
-       boundVar (TypeE expr t) = (boundVar expr)
        
        freeVar :: Expr -> [String]
        freeVar (VarE x) = [x]
-       freeVar (Lambda x expr t) = except x (freeVar expr)
+       freeVar (Lambda x expr) = except x (freeVar expr)
        freeVar (AppE e1 e2) = (freeVar e1) ++ (freeVar e2)
-       freeVar (TypeE expr t) = (freeVar expr)
+
+       --freeVarSet :: [Set] -> [String]
+       --freeVarSet :: 
 
        except :: String -> [String] -> [String]
        except _ [] = []
@@ -37,7 +42,19 @@ module TypeinfData where
        search [] _ = False
        search ((Gama y t) : bs) x = if y == x then True else (search bs x)
        
-       remove :: [Basis] -> String -> Type -> [Basis]
-       remove [] _ _ = []
-       remove ((Gama y t1) : bs) x t2 = if y == x && t1 == t2 then bs else [Gama y t1] ++ (remove bs x t2)
-       
+       remove :: [Basis] -> String -> [Basis]
+       remove [] _ = []
+       remove ((Gama y t) : bs) x = if y == x then bs else [Gama y t] ++ (remove bs x)
+
+       count :: Int -> Int
+       count c = c + 1
+
+       getType :: [Basis] -> [String] -> [Type]
+       getType [] _ = []
+       getType _ [] = []
+       getType ((Gama y t) : bs) (x : xs) = if y == x then [t] ++ (getType bs xs) else (getType bs (x : xs))
+
+       turnSet :: [Type] -> [Type] -> [Set]
+       turnSet [] _ = []
+       turnSet _ [] = []
+       turnSet (t1 : ts) (t2 : tss) = (Equal t1 t2) : (turnSet ts tss)
