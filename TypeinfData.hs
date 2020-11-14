@@ -6,16 +6,12 @@ module TypeinfData where
 
        data Type = VarT String
                  | AppT Type Type
-		 | ErrorType
+                 | ErrorType
                  deriving (Show, Eq)
 
        data Basis = Gama String Type
                   deriving (Show, Eq)
-
-       data Set = Equal Type Type
-                | Fail
-                deriving (Show, Eq)
-
+		  
        boundVar :: Expr -> [String]
        boundVar (VarE x) = []
        boundVar (Lambda x expr) = [x] ++ (boundVar expr)
@@ -53,8 +49,3 @@ module TypeinfData where
        getType [] _ = []
        getType _ [] = []
        getType ((Gama y t) : bs) (x : xs) = if y == x then [t] ++ (getType bs xs) else (getType bs (x : xs))
-
-       turnSet :: [Type] -> [Type] -> [Set]
-       turnSet [] _ = []
-       turnSet _ [] = []
-       turnSet (t1 : ts) (t2 : tss) = (Equal t1 t2) : (turnSet ts tss)
