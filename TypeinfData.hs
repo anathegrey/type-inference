@@ -6,12 +6,12 @@ module TypeinfData where
 
        data Type = VarT String
                  | AppT Type Type
-                 | ErrorType
+                 | NoType
                  deriving (Show, Eq)
 
        data Basis = Gama String Type
                   deriving (Show, Eq)
-		  
+
        boundVar :: Expr -> [String]
        boundVar (VarE x) = []
        boundVar (Lambda x expr) = [x] ++ (boundVar expr)
@@ -37,6 +37,10 @@ module TypeinfData where
        search :: [Basis] -> String -> Bool
        search [] _ = False
        search ((Gama y t) : bs) x = if y == x then True else (search bs x)
+
+       searchType :: Type -> [(Type, Type)] -> Bool
+       searchType _ [] = False
+       searchType t ((t1, t2) : ts) = if t == t1 || t == t2 then True else (searchType t ts)
        
        remove :: [Basis] -> String -> [Basis]
        remove [] _ = []
@@ -45,7 +49,6 @@ module TypeinfData where
        count :: Int -> Int
        count c = c + 1
 
-       getType :: [Basis] -> [String] -> [Type]
-       getType [] _ = []
-       getType _ [] = []
-       getType ((Gama y t) : bs) (x : xs) = if y == x then [t] ++ (getType bs xs) else (getType bs (x : xs))
+       getType :: String -> [Basis] -> Type
+       getType _  [] = NoType
+       getType x ((Gama y t) : g) = if x == y then t else (getType x g) 
