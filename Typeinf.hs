@@ -17,14 +17,14 @@ module Typeinf where
        unify ((t1, t2) : ts) (s, oc)
              | t1 == t2 = (unify ts (s, oc))
              | t2 == (VarT (s : show oc)) = (unify ((t2, t1) : ts) (s, oc)) 
-             | t1 == (VarT (s : show oc)) = (t1, t2) : (subst (t1, t2) ts) 
-             | otherwise = (unify (ts ++ [(t1, t2)]) (s, oc))
+             | t1 == (VarT (s : show oc)) = (t1, t2) : (unify (subst (t1, t2) ts) (s, oc))
+             | otherwise = ((t1, t2) : ts)
 
        substBasis :: [(Type, Type)] -> [Basis] -> [Basis]
        substBasis [] _ = []
        substBasis _ [] = []
        substBasis ((t1, t2) : ts) ((Gama x tx) : gs)
-                  | tx == t2 = (Gama x t2) : (substBasis ((t1, t2) : ts) gs)
+                  | tx == t2 = (Gama x t1) : (substBasis ((t1, t2) : ts) gs)
                   | otherwise = substBasis ts ((Gama x tx) : gs)
 
 
@@ -47,10 +47,10 @@ module Typeinf where
                                    (g2, t2, c2, a2) = (milner m2 (count oc) 'a')
                                in ((substBasis ss g1 ++ g2), (VarT (s : (show oc))), oc, s)
 
+--Examples
 
-
-
-
+       ex1 :: Expr
+       ex1 = Lambda "x" (Lambda "y" (Lambda "z" (AppE (VarE "x") (AppE (VarE "y") (VarE "z"))))) 
 
 
 
