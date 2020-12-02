@@ -22,9 +22,6 @@ module TypeinfData where
        freeVar (Lambda x expr) = except x (freeVar expr)
        freeVar (AppE e1 e2) = (freeVar e1) ++ (freeVar e2)
 
-       --freeVarSet :: [Set] -> [String]
-       --freeVarSet :: 
-
        except :: String -> [String] -> [String]
        except _ [] = []
        except x (y : ys) = if x == y then (except x ys) else y : (except x ys)
@@ -51,4 +48,4 @@ module TypeinfData where
 
        getType :: String -> [Basis] -> Type
        getType _  [] = NoType
-       getType x ((Gama y t) : g) = if x == y then t else (getType x g) 
+       getType x ((Gama y t) : g) = if x == y then t else (getType x g)
