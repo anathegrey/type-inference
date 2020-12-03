@@ -24,27 +24,29 @@ module Typeinf where
        substBasis [] _ = []
        substBasis _ [] = []
        substBasis ((t1, t2) : ts) ((Gama x tx) : gs)
-                  | tx == t1 = (Gama x t2) : (substBasis ((t1, t2) : ts) gs)
-                  | otherwise = substBasis ts ((Gama x tx) : gs)
+                  | tx == t1 = (Gama x t2) : (substBasis ts gs)
+                  | otherwise = (Gama x tx) : (substBasis ((t1, t2) : ts) gs)
 
 
        substType :: [(Type, Type)] -> Type -> Type
        substType [] t = t
        substType ((t1, t2) : ts) alpha = if t1 == alpha then t2 else (substType ts alpha)
 
-       vFind :: [String] -> [Basis] -> [Basis] -> [(Type, Type)]
-       vFind [] _ _ = []
-       vFind (x : xs) ((Gama y1 t1) : g1) ((Gama y2 t2) : g2) = if (search ((Gama y1 t1) : g1) x) == True && (search ((Gama y2 t2) : g2) x) == True then (getType x ((Gama y1 t1) : g1),  getType x ((Gama y2 t2) : g2)) : (vFind xs ((Gama y1 t1) : g1) ((Gama y2 t2) : g2)) else (vFind xs ((Gama y1 t1) : g1) ((Gama y2 t2) : g2)) 
+       makePair :: [String] -> [Basis] -> [Basis] -> [(Type, Type)]
+       makePair [] _ _ = []
+       makePair (x : xs) ((Gama y1 t1) : g1) ((Gama y2 t2) : g2)
+                | (searchBasis ((Gama y1 t1) : g1) x) == True && (searchBasis ((Gama y2 t2) : g2) x) == True = (getType x ((Gama y1 t1) : g1),  getType x ((Gama y2 t2) : g2)) : (makePair xs ((Gama y1 t1) : g1) ((Gama y2 t2) : g2))
+                | otherwise = (makePair xs ((Gama y1 t1) : g1) ((Gama y2 t2) : g2)) 
 
        milner :: Expr -> Int -> Char -> ([Basis], Type, Int, Char)
        milner (VarE x) oc s = ([Gama x (VarT (s : show oc))], (VarT (s : show oc)), oc, s)
        milner (Lambda x expr) oc s =
                                  let a = getType x g
                                      (g, t, c, s1) = (milner expr (count oc) s)
-                                 in if (search g x) == False then (g, (AppT (VarT (s : show oc)) t), oc, s) else ((remove g x), (AppT a t), oc, s)
+                                 in if (searchBasis g x) == False then (g, (AppT (VarT (s : show oc)) t), oc, s) else ((remove g x), (AppT a t), oc, s)
        milner (AppE m1 m2) oc s =
                                let v = intersect (freeVar m1) (freeVar m2)
-                                   ss = unify ((vFind v g1 g2) ++ [(t1, AppT t2 (VarT (s : (show oc))))]) (s, oc)
+                                   ss = unify ((makePair v g1 g2) ++ [(t1, AppT t2 (VarT (s : (show oc))))]) (s, oc)
                                    (g1, t1, c1, a1) = (milner m1 (count oc) 'a')
                                    (g2, t2, c2, a2) = (milner m2 (count oc) 'b')
                                in ((substBasis ss g1 ++ g2), (substType ss (VarT (s : (show oc)))), oc, s)
