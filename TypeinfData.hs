@@ -29,11 +29,11 @@ module TypeinfData where
        intersect :: [String] -> [String] -> [String]
        intersect l [] = []
        intersect [] l = []
-       intersect (x : xs) ys = if elem x ys == False then x : (intersect xs ys) else (intersect xs ys)
+       intersect (x : xs) ys = if elem x ys == True then x : (intersect xs ys) else (intersect xs ys)
 
-       search :: [Basis] -> String -> Bool
-       search [] _ = False
-       search ((Gama y t) : bs) x = if y == x then True else (search bs x)
+       searchBasis :: [Basis] -> String -> Bool
+       searchBasis [] _ = False
+       searchBasis ((Gama y t) : bs) x = if y == x then True else (searchBasis bs x)
 
        searchType :: Type -> [(Type, Type)] -> Bool
        searchType _ [] = False
