@@ -4,7 +4,7 @@ module Typeinf where
        subst :: (Type, Type) -> [(Type, Type)] -> [(Type, Type)]
        subst _ [] = []
        subst (alpha, t) ((t1, t2) : ts)
-             | (searchType alpha ts) == True = [(NoType, NoType)]
+             | (searchType alpha ((t1, t2) : ts)) == True = [(Fail, Fail)]
              | otherwise =
                   case () of
                     () | t1 == t   -> (t, t2) : (subst (alpha, t) ts)
@@ -13,6 +13,7 @@ module Typeinf where
 
        unify :: [(Type, Type)] -> (Char, Int) -> [(Type, Type)] 
        unify [] _ = []
+       unify [(Fail, Fail)] _ = [(Fail, Fail)]
        unify (((AppT e1 e2), (AppT e3 e4)) : ts) (s, oc) = (unify ((e1, e3) : (e2, e4) : ts) (s, oc))
        unify ((t1, t2) : ts) (s, oc)
              | t1 == t2 = (unify ts (s, oc))
@@ -23,6 +24,8 @@ module Typeinf where
        substBasis :: [(Type, Type)] -> [Basis] -> [Basis]
        substBasis [] _ = []
        substBasis _ [] = []
+       substBasis ts _
+                 | (searchType Fail ts) == True = []
        substBasis ((t1, t2) : ts) ((Gama x tx) : gs)
                   | tx == t1 = (Gama x t2) : (substBasis ts gs)
                   | otherwise = (Gama x tx) : (substBasis ((t1, t2) : ts) gs)
@@ -30,6 +33,8 @@ module Typeinf where
 
        substType :: [(Type, Type)] -> Type -> Type
        substType [] t = t
+       substType ts _
+                 | (searchType Fail ts) == True = Fail
        substType ((t1, t2) : ts) alpha = if t1 == alpha then t2 else (substType ts alpha)
 
        makePair :: [String] -> [Basis] -> [Basis] -> [(Type, Type)]
