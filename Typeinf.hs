@@ -8,15 +8,15 @@ module Typeinf where
              | t2 == t = (t1, t) : (subst (alpha, t) ts)
              | otherwise = (t1, t2) : (subst (alpha, t) ts)
 
-       unify :: [(Type, Type)] -> (Char, Int) -> Result
+       unify :: [(Type, Type)] -> Type -> Result
        unify [] _ = (Substitution [])
-       unify ((AppT e1 e2, AppT e3 e4) : ts) (s, oc) = unify ((e1, e3) : (e2, e4) : ts) (s, oc)
-       unify ((t1, AppT t2 t3) : ts) (s, oc) = unify ((t1, t2) : (t1, t3) : ts) (s, oc)
-       unify ((t1, t2) : ts) (s, oc)
-              | t1 == t2 = unify ts (s, oc)
-              | t2 == (VarT (s : show oc)) = unify ((t2, t1) : ts) (s, oc)
-              | t1 == (VarT (s : show oc)) = if (notMember t1 (freeVarType t2)) == True then (concatResult (t1, t2) (unify (subst (t1, t2) ts) (s, oc))) else FAIL
-              | otherwise = concatResult (t1, t2) (unify ts (s, oc))
+       unify ((AppT e1 e2, AppT e3 e4) : ts) alpha = unify ((e1, e3) : (e2, e4) : ts) alpha
+       unify ((t1, AppT t2 t3) : ts) alpha = unify ((t1, t2) : (t1, t3) : ts) alpha
+       unify ((t1, t2) : ts) alpha
+              | t1 == t2 = unify ts alpha
+              | t2 == alpha = unify ((alpha, t1) : ts) alpha
+              | t1 == alpha = if (notMember alpha (freeVarType t2)) == True then (concatResult (alpha, t2) (unify (subst (alpha, t2) ts) alpha)) else FAIL
+              | otherwise = concatResult (t1, t2) (unify ts alpha)
 
        substBasis :: Result -> [Basis] -> [Basis]
        substBasis _ [] = []
@@ -42,7 +42,7 @@ module Typeinf where
                                  in if (searchBasis g x) == False then (g, (AppT (VarT (s : show oc)) t), oc, s) else ((remove g x), (AppT a t), oc, s)
        milner (AppE m1 m2) oc s =
                                let v = intersect (freeVar m1) (freeVar m2)
-                                   ss = (unify ((makePair v g1 g2) ++ [(t1, AppT t2 (VarT (s : show oc)))]) (s, oc))
+                                   ss = unify ((makePair v g1 g2) ++ [(t1, AppT t2 (VarT (s : show oc)))]) (VarT (s : show oc))
                                    (g1, t1, c1, a1) = (milner m1 (count oc) 'a')
                                    (g2, t2, c2, a2) = (milner m2 (count oc) 'b')
                                in ((substBasis ss g1 ++ g2), (substType ss (VarT (s : (show oc)))), oc, s)
