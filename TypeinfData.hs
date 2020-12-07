@@ -48,10 +48,6 @@ module TypeinfData where
        searchBasis :: [Basis] -> String -> Bool
        searchBasis [] _ = False
        searchBasis ((Gama y t) : bs) x = if y == x then True else (searchBasis bs x)
-
-       searchType :: Type -> [(Type, Type)] -> Bool
-       searchType _ [] = False
-       searchType t ((t1, t2) : ts) = if t == t1 || t == t2 then True else (searchType t ts)
        
        remove :: [Basis] -> String -> [Basis]
        remove [] _ = []
